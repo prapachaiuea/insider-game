@@ -16,6 +16,7 @@ export function renderRoute(state) {
   });
 
   const roomCodeDisplay = document.getElementById("room-code-display");
+  const btnLeaveRoom = document.getElementById("btn-leave-room");
   if (roomCodeDisplay) {
     if (state.roomId) {
       roomCodeDisplay.hidden = false;
@@ -23,5 +24,8 @@ export function renderRoute(state) {
     } else {
       roomCodeDisplay.hidden = true;
     }
+  }
+  if (btnLeaveRoom) {
+    btnLeaveRoom.hidden = !state.roomId;
   }
 }

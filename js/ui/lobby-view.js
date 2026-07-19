@@ -1,5 +1,5 @@
 import { getState } from "../state.js";
-import { startRound, MIN_PLAYERS, MAX_PLAYERS } from "../game.js";
+import { startRound, setRoundDuration, MIN_PLAYERS, MAX_PLAYERS, ROUND_DURATION_MS } from "../game.js";
 import { showToast } from "./components.js";
 
 let initialized = false;
@@ -10,6 +10,7 @@ export function init() {
 
   const btnStart = document.getElementById("btn-start-game");
   const btnCopy = document.getElementById("btn-copy-link");
+  const selectDuration = document.getElementById("select-round-duration");
 
   btnStart.addEventListener("click", async () => {
     const { roomId } = getState();
@@ -37,6 +38,16 @@ export function init() {
       showToast("Select and copy the link.");
     }
   });
+
+  selectDuration.addEventListener("change", async () => {
+    const { roomId, isHost } = getState();
+    if (!isHost) return;
+    try {
+      await setRoundDuration(roomId, Number(selectDuration.value));
+    } catch {
+      showToast("Could not update the round length.", true);
+    }
+  });
 }
 
 export function render(state) {
@@ -57,6 +68,10 @@ export function render(state) {
     li.textContent = tags ? `${p.name} (${tags})` : p.name;
     playerList.appendChild(li);
   });
+
+  const selectDuration = document.getElementById("select-round-duration");
+  selectDuration.value = String(state.public?.roundDurationMs || ROUND_DURATION_MS);
+  selectDuration.disabled = !state.isHost;
 
   const btnStart = document.getElementById("btn-start-game");
   const hint = document.getElementById("lobby-hint");

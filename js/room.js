@@ -1,13 +1,15 @@
 import {
-  ref, set, get, update, onValue, onDisconnect,
+  ref, set, get, update, remove, onValue, onDisconnect,
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 import { db } from "./firebase-init.js";
 import { getState, setState } from "./state.js";
 import { generateRoomCode } from "./utils/id.js";
-import { saveLastRoom, saveLastName } from "./utils/storage.js";
+import { saveLastRoom, saveLastName, clearLastRoom } from "./utils/storage.js";
+import { ROUND_DURATION_MS } from "./game.js";
 
 const MAX_CODE_ATTEMPTS = 5;
-let listenersAttached = false;
+let subscribedRoomId = null;
+let unsubscribers = [];
 
 export function getRoomIdFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -18,6 +20,12 @@ export function getRoomIdFromUrl() {
 export function setRoomInUrl(roomId) {
   const url = new URL(window.location.href);
   url.searchParams.set("room", roomId);
+  window.history.replaceState({}, "", url);
+}
+
+function clearRoomFromUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("room");
   window.history.replaceState({}, "", url);
 }
 
@@ -36,6 +44,7 @@ export async function createRoom(name) {
       createdAt: Date.now(),
       phase: "lobby",
       roundNumber: 0,
+      roundDurationMs: ROUND_DURATION_MS,
     });
     await joinRoom(roomId, name);
     return roomId;
@@ -73,35 +82,70 @@ export async function joinRoom(roomId, name) {
   return roomId;
 }
 
+export async function leaveRoom() {
+  const { roomId, uid } = getState();
+  if (!roomId) return;
+
+  try {
+    await onDisconnect(ref(db, `rooms/${roomId}/players/${uid}/online`)).cancel();
+    await remove(ref(db, `rooms/${roomId}/players/${uid}`));
+  } catch {
+    // Best-effort — still reset the local view even if the write fails (e.g. offline).
+  }
+
+  unsubscribeFromRoom();
+  clearLastRoom();
+  clearRoomFromUrl();
+
+  setState({
+    roomId: null,
+    isHost: false,
+    phase: "landing",
+    public: null,
+    players: {},
+    mySecret: null,
+    insiderUid: null,
+    votes: {},
+  });
+}
+
+function unsubscribeFromRoom() {
+  unsubscribers.forEach((unsub) => unsub());
+  unsubscribers = [];
+  subscribedRoomId = null;
+}
+
 export function subscribeToRoom(roomId) {
-  if (listenersAttached) return;
-  listenersAttached = true;
+  if (subscribedRoomId === roomId) return; // already listening to this room
+  if (subscribedRoomId !== null) unsubscribeFromRoom(); // switched rooms in the same tab
+  subscribedRoomId = roomId;
+
   const { uid } = getState();
   const ignoreDenied = () => {};
 
-  onValue(ref(db, `rooms/${roomId}/public`), (snap) => {
+  unsubscribers.push(onValue(ref(db, `rooms/${roomId}/public`), (snap) => {
     const publicData = snap.val() || {};
     setState({
       public: publicData,
       phase: publicData.phase || "lobby",
       isHost: publicData.host === uid,
     });
-  });
+  }));
 
-  onValue(ref(db, `rooms/${roomId}/players`), (snap) => {
+  unsubscribers.push(onValue(ref(db, `rooms/${roomId}/players`), (snap) => {
     setState({ players: snap.val() || {} });
-  });
+  }));
 
-  onValue(ref(db, `rooms/${roomId}/secrets/${uid}`), (snap) => {
+  unsubscribers.push(onValue(ref(db, `rooms/${roomId}/secrets/${uid}`), (snap) => {
     setState({ mySecret: snap.val() || null });
-  }, ignoreDenied);
+  }, ignoreDenied));
 
   // Denied by rules until phase === 'results' (or unless we're the host) — expected, not an error.
-  onValue(ref(db, `rooms/${roomId}/reveal/insiderUid`), (snap) => {
+  unsubscribers.push(onValue(ref(db, `rooms/${roomId}/reveal/insiderUid`), (snap) => {
     setState({ insiderUid: snap.val() || null });
-  }, ignoreDenied);
+  }, ignoreDenied));
 
-  onValue(ref(db, `rooms/${roomId}/votes`), (snap) => {
+  unsubscribers.push(onValue(ref(db, `rooms/${roomId}/votes`), (snap) => {
     setState({ votes: snap.val() || {} });
-  }, ignoreDenied);
+  }, ignoreDenied));
 }

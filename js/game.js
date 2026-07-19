@@ -56,9 +56,15 @@ export async function startRound(roomId) {
   await update(ref(db), updates);
 }
 
+export async function setRoundDuration(roomId, durationMs) {
+  await update(ref(db, `rooms/${roomId}/public`), { roundDurationMs: durationMs });
+}
+
 export async function startTimer(roomId) {
+  const { public: pub } = getState();
+  const durationMs = pub?.roundDurationMs || ROUND_DURATION_MS;
   await update(ref(db, `rooms/${roomId}/public`), {
-    timer: { startAt: Date.now(), durationMs: ROUND_DURATION_MS },
+    timer: { startAt: Date.now(), durationMs },
     phase: "guessing",
   });
 }

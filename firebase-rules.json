@@ -15,6 +15,9 @@
           "roundNumber": {
             ".write": "auth != null && auth.uid === root.child('rooms').child($roomId).child('public/host').val()"
           },
+          "roundDurationMs": {
+            ".write": "auth != null && auth.uid === root.child('rooms').child($roomId).child('public/host').val()"
+          },
           "timer": {
             ".write": "auth != null && auth.uid === root.child('rooms').child($roomId).child('public/host').val()"
           },

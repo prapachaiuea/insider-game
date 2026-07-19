@@ -47,6 +47,22 @@ body {
   margin-top: 0.25rem;
 }
 
+.leave-link {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.4rem 0;
+  text-decoration: underline;
+  margin-top: 0.15rem;
+}
+
+.leave-link:hover:not(:disabled) {
+  color: var(--lose);
+  opacity: 1;
+}
+
 #app {
   width: 100%;
   max-width: 480px;
@@ -92,6 +108,24 @@ input[type="text"] {
 input[type="text"]:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+select {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+select:disabled {
+  opacity: 0.6;
 }
 
 button {

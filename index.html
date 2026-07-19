@@ -10,6 +10,7 @@
   <header class="app-header">
     <h1>🕵️ Insider</h1>
     <p class="room-code" id="room-code-display" hidden></p>
+    <button id="btn-leave-room" type="button" class="leave-link" hidden>Leave Room</button>
   </header>
 
   <main id="app">
@@ -44,6 +45,17 @@
         <button id="btn-copy-link" type="button">Copy</button>
       </div>
       <ul id="player-list" class="player-list"></ul>
+      <label>
+        Round length
+        <select id="select-round-duration">
+          <option value="180000">3 minutes</option>
+          <option value="240000">4 minutes</option>
+          <option value="300000" selected>5 minutes (standard)</option>
+          <option value="360000">6 minutes</option>
+          <option value="420000">7 minutes</option>
+          <option value="600000">10 minutes</option>
+        </select>
+      </label>
       <p id="lobby-hint" class="hint"></p>
       <button id="btn-start-game" type="button" hidden>Start Game</button>
     </section>

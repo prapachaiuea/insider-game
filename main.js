@@ -1,6 +1,6 @@
 import { initAuth } from "./js/auth.js";
 import { getState, setState, subscribe } from "./js/state.js";
-import { createRoom, joinRoom, getRoomIdFromUrl, setRoomInUrl } from "./js/room.js";
+import { createRoom, joinRoom, leaveRoom, getRoomIdFromUrl, setRoomInUrl } from "./js/room.js";
 import { renderRoute } from "./js/router.js";
 import { watchServerOffset } from "./js/utils/timer.js";
 import { getLastName, getLastRoom } from "./js/utils/storage.js";
@@ -24,6 +24,13 @@ async function boot() {
     views.forEach((v) => v.render(state));
   });
   setupLandingForm();
+  document.getElementById("btn-leave-room").addEventListener("click", async () => {
+    try {
+      await leaveRoom();
+    } catch {
+      showToast("Could not leave the room — check your connection.", true);
+    }
+  });
   renderRoute(getState());
   views.forEach((v) => v.render(getState()));
 
