@@ -40,10 +40,11 @@ async function boot() {
 }
 
 async function prefillLanding() {
-  let roomFromUrl = getRoomIdFromUrl();
+  const roomFromUrlRaw = getRoomIdFromUrl();
   const savedRoom = getLastRoom();
   const lastName = getLastName();
 
+  let roomFromUrl = roomFromUrlRaw;
   if (!roomFromUrl && savedRoom) {
     roomFromUrl = savedRoom;
     setRoomInUrl(roomFromUrl);
@@ -60,8 +61,10 @@ async function prefillLanding() {
     document.getElementById("landing-join-alt").hidden = true;
   }
 
-  // Silent rejoin after a page refresh, so returning players don't have to re-enter anything.
-  if (roomFromUrl && lastName) {
+  // Only silently rejoin if we're returning to the SAME room we were already in (a refresh) —
+  // not whenever this browser happens to have a leftover name/room from a past, different game.
+  const isReturningToSameRoom = roomFromUrlRaw && savedRoom === roomFromUrlRaw;
+  if (isReturningToSameRoom && lastName) {
     try {
       await joinRoom(roomFromUrl, lastName);
     } catch {
