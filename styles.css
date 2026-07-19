@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark;
   --bg: #12141c;
   --surface: #1b1f2b;
   --surface-alt: #242938;
@@ -10,17 +11,6 @@
   --lose: #ff5c5c;
   --border: #2f3547;
   --radius: 14px;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #f4f5fa;
-    --surface: #ffffff;
-    --surface-alt: #eef0f7;
-    --text: #1a1c26;
-    --text-muted: #5c6178;
-    --border: #dde0ec;
-  }
 }
 
 * {
