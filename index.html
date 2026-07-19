@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Insider</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>🕵️ Insider</h1>
+    <p class="room-code" id="room-code-display" hidden></p>
+  </header>
+
+  <main id="app">
+    <section id="view-landing" class="view">
+      <p class="tagline">A party game of hidden identities. Ask questions, find the word, catch the Insider.</p>
+      <form id="form-landing">
+        <label>
+          Your name
+          <input id="input-name" type="text" maxlength="20" required autocomplete="off" placeholder="e.g. Beam" />
+        </label>
+        <p id="landing-join-row" class="hint" hidden>Joining room <strong id="landing-room-code"></strong></p>
+        <button type="submit" id="btn-primary-action">Create Room</button>
+      </form>
+
+      <div id="landing-join-alt" class="join-alt">
+        <div class="divider">or join with a code</div>
+        <label>
+          Room code
+          <input id="input-room-code" type="text" maxlength="6" autocomplete="off" placeholder="ABCDE" style="text-transform:uppercase" />
+        </label>
+        <button type="button" id="btn-join-room">Join Room</button>
+      </div>
+
+      <p class="error-text" id="landing-error" hidden></p>
+    </section>
+
+    <section id="view-lobby" class="view" hidden>
+      <h2>Lobby</h2>
+      <p>Share this link to invite friends:</p>
+      <div class="share-row">
+        <input id="share-link" type="text" readonly />
+        <button id="btn-copy-link" type="button">Copy</button>
+      </div>
+      <ul id="player-list" class="player-list"></ul>
+      <p id="lobby-hint" class="hint"></p>
+      <button id="btn-start-game" type="button" hidden>Start Game</button>
+    </section>
+
+    <section id="view-role-reveal" class="view" hidden>
+      <h2>Your Role</h2>
+      <div id="role-card" class="role-card"></div>
+      <button id="btn-start-timer" type="button" hidden>Start Timer</button>
+      <p id="role-reveal-hint" class="hint"></p>
+    </section>
+
+    <section id="view-guessing" class="view" hidden>
+      <h2>Guessing Round</h2>
+      <div id="countdown" class="countdown">5:00</div>
+      <p class="hint">Ask yes/no questions out loud to guess the word!</p>
+      <button id="btn-word-guessed" type="button">Word Guessed!</button>
+    </section>
+
+    <section id="view-voting" class="view" hidden>
+      <h2>Who was the Insider?</h2>
+      <ul id="vote-list" class="player-list"></ul>
+      <p id="voting-hint" class="hint"></p>
+      <button id="btn-reveal" type="button" hidden>Reveal Results</button>
+    </section>
+
+    <section id="view-results" class="view" hidden>
+      <h2 id="results-banner" class="results-banner"></h2>
+      <p id="results-insider"></p>
+      <ul id="results-tally" class="player-list"></ul>
+      <div class="button-row">
+        <button id="btn-play-again" type="button" hidden>Play Again</button>
+        <button id="btn-back-to-lobby" type="button" hidden>Back to Lobby</button>
+      </div>
+    </section>
+  </main>
+
+  <p id="toast" class="toast" hidden></p>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
