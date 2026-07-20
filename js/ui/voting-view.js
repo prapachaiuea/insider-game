@@ -1,6 +1,7 @@
 import { getState } from "../state.js";
 import { castVote } from "../votes.js";
 import { revealResults } from "../game.js";
+import { showToast } from "./components.js";
 
 let initialized = false;
 
@@ -41,7 +42,15 @@ export function render(state) {
     btn.disabled = isMaster;
     btn.addEventListener("click", async () => {
       const { roomId } = getState();
-      await castVote(roomId, uid);
+      btn.disabled = true;
+      try {
+        await castVote(roomId, uid);
+        showToast(`Voted for ${p.name}${uid === state.uid ? " (you)" : ""}.`);
+      } catch {
+        showToast("Could not cast your vote — check your connection.", true);
+      } finally {
+        btn.disabled = isMaster;
+      }
     });
     li.appendChild(btn);
     list.appendChild(li);

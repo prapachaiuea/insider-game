@@ -47,6 +47,7 @@
           }
         },
         "votes": {
+          ".read": "auth != null && root.child('rooms').child($roomId).child('players').child(auth.uid).exists()",
           "$uid": {
             ".read": "auth != null && (auth.uid === $uid || auth.uid === root.child('rooms').child($roomId).child('public/host').val() || root.child('rooms').child($roomId).child('public/phase').val() === 'results')",
             ".write": "auth != null && (auth.uid === root.child('rooms').child($roomId).child('public/host').val() || (auth.uid === $uid && root.child('rooms').child($roomId).child('public/phase').val() === 'voting' && root.child('rooms').child($roomId).child('secrets').child(auth.uid).child('role').val() !== 'master' && newData.child('votedFor').exists() && root.child('rooms').child($roomId).child('players').child(newData.child('votedFor').val()).exists()))"
