@@ -2,9 +2,10 @@ import { initAuth } from "./js/auth.js";
 import { getState, setState, subscribe } from "./js/state.js";
 import { createRoom, joinRoom, leaveRoom, getRoomIdFromUrl, clearRoomFromUrl } from "./js/room.js";
 import { renderRoute } from "./js/router.js";
-import { watchServerOffset } from "./js/utils/timer.js";
+import { watchServerOffset, serverNow } from "./js/utils/timer.js";
 import { getLastName, getLastRoom, clearLastRoom } from "./js/utils/storage.js";
 import { showToast } from "./js/ui/components.js";
+import { unlockAudio, updateForState, isMuted, setMuted } from "./js/audio.js";
 
 import * as lobbyView from "./js/ui/lobby-view.js";
 import * as roleRevealView from "./js/ui/role-reveal-view.js";
@@ -22,8 +23,10 @@ async function boot() {
   subscribe((state) => {
     renderRoute(state);
     views.forEach((v) => v.render(state));
+    updateForState(state, { serverNow });
   });
   setupLandingForm();
+  setupMusicToggle();
   document.getElementById("btn-leave-room").addEventListener("click", async () => {
     try {
       await leaveRoom();
@@ -103,12 +106,31 @@ async function prefillLanding() {
   }
 }
 
+// Reflects the persisted mute preference on the header button and wires its toggle.
+// unlockAudio() lives here rather than in this handler because it must fire from the very
+// first user gesture on the page — the landing form's submit/join clicks are that gesture.
+function setupMusicToggle() {
+  const btn = document.getElementById("btn-mute-music");
+  function render() {
+    const muted = isMuted();
+    btn.textContent = muted ? "🔇" : "🔊";
+    btn.setAttribute("aria-pressed", String(muted));
+  }
+  btn.addEventListener("click", () => {
+    unlockAudio();
+    setMuted(!isMuted());
+    render();
+  });
+  render();
+}
+
 function setupLandingForm() {
   const form = document.getElementById("form-landing");
   const btnJoinAlt = document.getElementById("btn-join-room");
   const errorEl = document.getElementById("landing-error");
 
   form.addEventListener("submit", async (e) => {
+    unlockAudio();
     e.preventDefault();
     const name = document.getElementById("input-name").value.trim();
     if (!name) return;
@@ -132,6 +154,7 @@ function setupLandingForm() {
   });
 
   btnJoinAlt.addEventListener("click", async () => {
+    unlockAudio();
     const name = document.getElementById("input-name").value.trim();
     const code = document.getElementById("input-room-code").value.trim().toUpperCase();
     if (!name || !code) return;
