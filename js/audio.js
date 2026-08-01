@@ -143,6 +143,22 @@ function playSting(freqs, { type = "sine", duration = 1.6 } = {}) {
   });
 }
 
+// Short one-shot UI feedback, separate from the looping ambient bed. playClick() is meant
+// to be wired to a single delegated listener covering every button in the app.
+export function playClick() {
+  if (!unlocked) return;
+  ensureContext();
+  noteEnvelope(720, { start: ctx.currentTime, duration: 0.06, peak: 0.12, type: "square", destination: masterGain });
+}
+
+export function playSuccess() {
+  if (!unlocked) return;
+  ensureContext();
+  const t = ctx.currentTime;
+  noteEnvelope(523.25, { start: t, duration: 0.12, peak: 0.18, type: "sine", destination: masterGain });
+  noteEnvelope(783.99, { start: t + 0.09, duration: 0.18, peak: 0.18, type: "sine", destination: masterGain });
+}
+
 function tensionBpm() {
   if (!currentTimerSnapshot) return 100;
   const { startAt, durationMs, serverNow } = currentTimerSnapshot;

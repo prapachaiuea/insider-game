@@ -5,7 +5,7 @@ import { renderRoute } from "./js/router.js";
 import { watchServerOffset, serverNow } from "./js/utils/timer.js";
 import { getLastName, getLastRoom, clearLastRoom } from "./js/utils/storage.js";
 import { showToast } from "./js/ui/components.js";
-import { unlockAudio, updateForState, isMuted, setMuted } from "./js/audio.js";
+import { unlockAudio, updateForState, isMuted, setMuted, playClick } from "./js/audio.js";
 
 import * as lobbyView from "./js/ui/lobby-view.js";
 import * as roleRevealView from "./js/ui/role-reveal-view.js";
@@ -27,6 +27,7 @@ async function boot() {
   });
   setupLandingForm();
   setupMusicToggle();
+  setupClickSfx();
   document.getElementById("btn-leave-room").addEventListener("click", async () => {
     try {
       await leaveRoom();
@@ -104,6 +105,18 @@ async function prefillLanding() {
       clearLastRoom();
     }
   }
+}
+
+// One delegated listener covers every button in the app — including ones views build later
+// via render() — with a soft click tick. Keeps every future button "just working" without
+// having to remember to instrument each new handler individually.
+function setupClickSfx() {
+  document.addEventListener("click", (e) => {
+    const control = e.target.closest("button");
+    if (!control || control.disabled) return;
+    unlockAudio();
+    playClick();
+  });
 }
 
 // Reflects the persisted mute preference on the header button and wires its toggle.

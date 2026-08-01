@@ -1,6 +1,7 @@
 import { getState } from "../state.js";
 import { markWordGuessed, markTimedOut } from "../game.js";
 import { serverNow, formatCountdown } from "../utils/timer.js";
+import { playSuccess } from "../audio.js";
 
 let initialized = false;
 let intervalId = null;
@@ -15,6 +16,7 @@ export function init() {
     btn.disabled = true;
     try {
       await markWordGuessed(roomId);
+      playSuccess();
     } finally {
       btn.disabled = false;
     }
