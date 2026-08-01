@@ -169,9 +169,9 @@ function tensionBpm() {
 }
 
 const SCENES = {
-  ambient: () => startPad([130.81, 164.81, 196.0], { type: "sine", swell: 5 }), // C3-E3-G3, warm major
-  suspense: () => startPad([116.54, 138.59, 174.61], { type: "triangle", swell: 3 }), // A#2-C#3-F3, moodier
-  tension: () => startPulse([261.63, 293.66, 329.63, 392.0], { type: "triangle", getBpm: tensionBpm }),
+  ambient: () => startPad([130.81, 164.81, 196.0], { type: "sine", swell: 5 }), // C3-E3-G3, warm & playful
+  suspense: () => startPad([103.83, 123.47, 155.56], { type: "triangle", swell: 3 }), // G#2-B2-D#3, hushed and unsure
+  tension: () => startPulse([261.63, 293.66, 311.13, 392.0], { type: "triangle", getBpm: tensionBpm }), // C4-D4-Eb4-G4, a sly little ticking arpeggio
 };
 
 function sceneKeyForPhase(phase) {
