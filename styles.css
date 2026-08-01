@@ -1,20 +1,60 @@
+/* ============================================================
+   INSIDER — "Case File"
+   A hidden-identity interrogation: someone in the room is lying.
+   Palette + type map directly onto the game's own mechanics —
+   redacted evidence, an interrogation lamp, a case stamped shut.
+   ============================================================ */
+
 :root {
   color-scheme: dark;
-  --bg: #12141c;
-  --surface: #1b1f2b;
-  --surface-alt: #242938;
-  --text: #f1f2f6;
-  --text-muted: #9aa0b4;
-  --accent: #7c5cff;
-  --accent-2: #ff5c8a;
-  --win: #38c976;
-  --lose: #ff5c5c;
-  --border: #2f3547;
-  --radius: 14px;
+
+  --bg: #100e0b;
+  --surface: #1a1712;
+  --surface-alt: #221e17;
+  --surface-raised: #272219;
+
+  --text: #f2ede1;
+  --text-muted: #8c8271;
+  --text-faint: #5c5546;
+
+  /* Interrogation-lamp red — danger, reveal, the Insider's role */
+  --accent: #e2432c;
+  --accent-soft: rgba(226, 67, 44, 0.16);
+  --accent-strong: #ff5138;
+
+  /* Manila / kraft-paper tan — "classified", the Master's role */
+  --classified: #c9a876;
+  --classified-soft: rgba(201, 168, 118, 0.16);
+
+  --win: #5fb787;
+  --win-soft: rgba(95, 183, 135, 0.14);
+  --lose: #e2432c;
+  --lose-soft: rgba(226, 67, 44, 0.14);
+
+  --border: #332c22;
+  --border-strong: #463c2c;
+  --radius: 10px;
+  --radius-lg: 14px;
+
+  --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
 }
 
 * {
   box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
@@ -22,44 +62,99 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-body);
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+}
+
+/* A single overhead interrogation lamp — the room's only real light source. */
+.lamp-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 900px 560px at 50% -8%, rgba(226, 67, 44, 0.10), transparent 62%),
+    radial-gradient(ellipse 1200px 900px at 50% 0%, rgba(242, 237, 225, 0.05), transparent 55%);
+}
+
+body::after {
+  /* Fine paper-grain texture so flat dark fields never look like a plain CSS gradient. */
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, transparent 1px, transparent 2px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0px, transparent 1px, transparent 2px);
+}
+
+.app-header,
+#app,
+.toast {
+  position: relative;
+  z-index: 1;
 }
 
 .app-header {
   width: 100%;
   max-width: 480px;
-  padding: 1.25rem 1.25rem 0;
+  padding: 1.75rem 1.25rem 0;
   text-align: center;
 }
 
+.case-eyebrow {
+  margin: 0 0 0.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--classified);
+}
+
 .app-header h1 {
-  font-size: 1.6rem;
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
   margin: 0;
+  line-height: 1;
 }
 
 .room-code {
   color: var(--text-muted);
-  font-size: 0.9rem;
-  letter-spacing: 0.05em;
-  margin-top: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  margin-top: 0.5rem;
+}
+
+.room-code::before {
+  content: "№ ";
+  color: var(--text-faint);
 }
 
 .leave-link {
   background: none;
   border: none;
-  color: var(--text-muted);
-  font-size: 0.85rem;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
   font-weight: 500;
-  padding: 0.4rem 0;
+  letter-spacing: 0.03em;
+  padding: 0.5rem 0 0;
   text-decoration: underline;
-  margin-top: 0.15rem;
+  text-underline-offset: 2px;
 }
 
 .leave-link:hover:not(:disabled) {
-  color: var(--lose);
+  color: var(--accent);
   opacity: 1;
 }
 
@@ -72,76 +167,91 @@ body {
 .view {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  padding: 1.6rem;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.6);
 }
 
 .view[hidden] {
   display: none;
 }
 
+.view h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
 .tagline {
   color: var(--text-muted);
+  line-height: 1.55;
   margin: 0 0 0.25rem;
 }
 
 label {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.9rem;
-  color: var(--text-muted);
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 input[type="text"] {
   background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 0.75rem 0.9rem;
+  font-family: var(--font-body);
   font-size: 1rem;
   color: var(--text);
 }
 
-input[type="text"]:focus {
+input[type="text"]:focus-visible,
+select:focus-visible,
+button:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 select {
   background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 0.75rem 0.9rem;
+  font-family: var(--font-body);
   font-size: 1rem;
   color: var(--text);
 }
 
-select:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
 select:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 button {
   background: var(--accent);
-  color: white;
+  color: #1a0805;
   border: none;
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  font-weight: 600;
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.1s ease;
 }
 
 button:hover:not(:disabled) {
-  opacity: 0.9;
+  opacity: 0.88;
 }
 
 button:active:not(:disabled) {
@@ -149,14 +259,14 @@ button:active:not(:disabled) {
 }
 
 button:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 #btn-copy-link {
   background: var(--surface-alt);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   flex-shrink: 0;
 }
 
@@ -168,8 +278,11 @@ button:disabled {
 
 .divider {
   text-align: center;
-  color: var(--text-muted);
-  font-size: 0.85rem;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   position: relative;
 }
 
@@ -181,7 +294,8 @@ button:disabled {
 
 .hint {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -192,8 +306,11 @@ button:disabled {
 
 .share-row input {
   flex: 1;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
 }
 
+/* Player chips read like evidence tags clipped to a case board. */
 .player-list {
   list-style: none;
   margin: 0;
@@ -204,20 +321,23 @@ button:disabled {
 }
 
 .player-chip {
+  position: relative;
   background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--classified);
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem 0.65rem 0.9rem;
   font-size: 0.95rem;
 }
 
 .player-chip.offline {
-  opacity: 0.5;
+  opacity: 0.45;
+  border-left-color: var(--text-faint);
 }
 
 .player-chip.is-insider {
-  border-color: var(--accent-2);
-  box-shadow: 0 0 0 1px var(--accent-2);
+  border-left-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
 }
 
 .vote-option {
@@ -231,66 +351,124 @@ button:disabled {
   text-align: left;
   background: var(--surface-alt);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--border-strong);
+  border-radius: 6px;
   font-weight: 500;
 }
 
 .vote-btn.selected {
-  border-color: var(--accent);
+  border-left-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
+  background: var(--accent-soft);
 }
 
+/* Role reveal — a case-file dossier card, the secret word declassified on arrival. */
 .role-card {
   background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1.5rem;
   text-align: center;
+  position: relative;
+}
+
+.role-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  border: 1px dashed rgba(201, 168, 118, 0.25);
+  margin: 6px;
+  pointer-events: none;
 }
 
 .role-badge {
   display: inline-block;
-  padding: 0.3rem 0.9rem;
-  border-radius: 999px;
+  padding: 0.35rem 1rem;
+  border-radius: 3px;
+  font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.9rem;
-  letter-spacing: 0.03em;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.9rem;
+  animation: stamp-in 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes stamp-in {
+  0% { transform: scale(1.6) rotate(-6deg); opacity: 0; }
+  100% { transform: scale(1) rotate(-2deg); opacity: 1; }
 }
 
 .role-master {
-  background: #ffce54;
-  color: #4a3600;
+  background: var(--classified-soft);
+  color: var(--classified);
+  border: 1px solid var(--classified);
 }
 
 .role-insider {
-  background: var(--accent-2);
-  color: white;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border: 1px solid var(--accent);
 }
 
 .role-commoner {
-  background: var(--surface);
+  background: transparent;
   color: var(--text-muted);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
 }
 
+.role-card p {
+  margin: 0 0 0.4rem;
+}
+
+/* The signature moment: the word sits under a redaction bar, then declassifies. */
 .secret-word {
-  font-size: 1.8rem;
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 1.9rem;
   font-weight: 700;
-  margin: 0.25rem 0 0.75rem;
+  letter-spacing: 0.01em;
+  padding: 0.15rem 0.7rem;
+  margin: 0.3rem 0 0.9rem;
+  border-radius: 3px;
+  animation: declassify 1.3s ease 0.2s both;
+}
+
+@keyframes declassify {
+  0%, 52% {
+    background: #060402;
+    color: transparent;
+    box-shadow: none;
+  }
+  68% {
+    background: var(--classified);
+    color: transparent;
+  }
+  100% {
+    background: transparent;
+    color: var(--text);
+  }
 }
 
 .countdown {
-  font-size: 3rem;
+  font-family: var(--font-mono);
+  font-size: 3.1rem;
   font-weight: 700;
   text-align: center;
+  letter-spacing: 0.02em;
+  color: var(--accent-strong);
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 28px rgba(226, 67, 44, 0.35);
 }
 
 .results-banner {
+  font-family: var(--font-display);
   text-align: center;
-  font-size: 1.3rem;
+  font-size: 1.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
   margin: 0;
 }
 
@@ -316,15 +494,15 @@ button:disabled {
   bottom: 1.25rem;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
   color: var(--text);
   padding: 0.65rem 1.1rem;
-  border-radius: 10px;
+  border-radius: var(--radius);
   font-size: 0.9rem;
   max-width: 90vw;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
 .toast-error {
