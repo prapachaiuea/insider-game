@@ -1,9 +1,9 @@
 import { initAuth } from "./js/auth.js";
 import { getState, setState, subscribe } from "./js/state.js";
-import { createRoom, joinRoom, leaveRoom, getRoomIdFromUrl, setRoomInUrl } from "./js/room.js";
+import { createRoom, joinRoom, leaveRoom, getRoomIdFromUrl, clearRoomFromUrl } from "./js/room.js";
 import { renderRoute } from "./js/router.js";
 import { watchServerOffset } from "./js/utils/timer.js";
-import { getLastName, getLastRoom } from "./js/utils/storage.js";
+import { getLastName, getLastRoom, clearLastRoom } from "./js/utils/storage.js";
 import { showToast } from "./js/ui/components.js";
 
 import * as lobbyView from "./js/ui/lobby-view.js";
@@ -46,36 +46,59 @@ async function boot() {
   }
 }
 
+// Resets the landing form to a clean "Create Room" state — used whenever a stale room
+// reference (dead link, finished game) needs to stop pinning the UI in "Join Room" mode.
+function resetLandingToCreateMode() {
+  clearLastRoom();
+  clearRoomFromUrl();
+  document.getElementById("btn-primary-action").textContent = "Create Room";
+  document.getElementById("landing-join-row").hidden = true;
+  document.getElementById("landing-join-alt").hidden = false;
+  document.getElementById("input-room-code").value = "";
+}
+
 async function prefillLanding() {
-  const roomFromUrlRaw = getRoomIdFromUrl();
+  const roomFromUrl = getRoomIdFromUrl();
   const savedRoom = getLastRoom();
   const lastName = getLastName();
-
-  let roomFromUrl = roomFromUrlRaw;
-  if (!roomFromUrl && savedRoom) {
-    roomFromUrl = savedRoom;
-    setRoomInUrl(roomFromUrl);
-  }
 
   if (lastName) {
     document.getElementById("input-name").value = lastName;
   }
 
+  // Case 1: the URL itself already carries a room code (a share link, or a refresh of a page
+  // that had ?room= set). Reflect Join-Room mode immediately, and if it matches the room we
+  // were last known to be in, attempt a silent rejoin — this is the normal "network dropped,
+  // page reloaded" reconnect path.
   if (roomFromUrl) {
     document.getElementById("btn-primary-action").textContent = "Join Room";
     document.getElementById("landing-join-row").hidden = false;
     document.getElementById("landing-room-code").textContent = roomFromUrl;
     document.getElementById("landing-join-alt").hidden = true;
+
+    if (savedRoom === roomFromUrl && lastName) {
+      try {
+        await joinRoom(roomFromUrl, lastName);
+      } catch {
+        // Room may no longer exist (expired/finished) — reset to a clean form instead of
+        // leaving the UI stuck pointed at a dead room code.
+        resetLandingToCreateMode();
+      }
+    }
+    return;
   }
 
-  // Only silently rejoin if we're returning to the SAME room we were already in (a refresh) —
-  // not whenever this browser happens to have a leftover name/room from a past, different game.
-  const isReturningToSameRoom = roomFromUrlRaw && savedRoom === roomFromUrlRaw;
-  if (isReturningToSameRoom && lastName) {
+  // Case 2: no room in the URL at all, but this browser remembers being in one — e.g. the tab
+  // was closed (or the app backgrounded and killed) mid-game instead of using Leave Room, then
+  // reopened via a plain bookmark/new tab with no ?room= param. Try a silent rejoin using ONLY
+  // the remembered room, and NEVER mutate the URL/UI until that attempt has actually succeeded
+  // — a dead saved room here leaves no visible trace at all if it fails, so there's nothing to
+  // get stuck in.
+  if (savedRoom && lastName) {
     try {
-      await joinRoom(roomFromUrl, lastName);
+      await joinRoom(savedRoom, lastName);
     } catch {
-      // Room may no longer exist or the game already started — fall back to the manual form.
+      clearLastRoom();
     }
   }
 }
@@ -99,6 +122,12 @@ function setupLandingForm() {
       }
     } catch (err) {
       showError(err);
+      // A dead room reached via ?room= (an old share link, a finished game) has no other way
+      // back to "Create Room" — the alt-join section is hidden whenever this mode is active —
+      // so clear it and hand the user back a working form instead of leaving them stuck.
+      if (roomFromUrl && err.message === "ROOM_NOT_FOUND") {
+        resetLandingToCreateMode();
+      }
     }
   });
 
