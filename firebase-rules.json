@@ -22,6 +22,9 @@
           "timer": {
             ".write": "auth != null && auth.uid === root.child('rooms').child($roomId).child('public/host').val()"
           },
+          "restartAt": {
+            ".write": "auth != null && auth.uid === root.child('rooms').child($roomId).child('public/host').val()"
+          },
           "guess": {
             ".write": "auth != null && (auth.uid === root.child('rooms').child($roomId).child('public/host').val() || (root.child('rooms').child($roomId).child('players').child(auth.uid).exists() && root.child('rooms').child($roomId).child('public/phase').val() === 'guessing'))"
           },

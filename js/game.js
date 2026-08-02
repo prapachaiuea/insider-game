@@ -50,6 +50,7 @@ export async function startRound(roomId) {
   updates[`rooms/${roomId}/reveal/insiderUid`] = insiderUid;
   updates[`rooms/${roomId}/public/guess`] = { wordGuessed: false, guessedBy: null, guessedAt: null };
   updates[`rooms/${roomId}/public/timer`] = null;
+  updates[`rooms/${roomId}/public/restartAt`] = null;
   updates[`rooms/${roomId}/public/roundNumber`] = (pub?.roundNumber || 0) + 1;
   updates[`rooms/${roomId}/public/phase`] = "role-reveal";
 
@@ -72,6 +73,14 @@ export async function startTimer(roomId) {
     timer: { startAt: Date.now() + PREROUND_COUNTDOWN_MS, durationMs },
     phase: "guessing",
   });
+}
+
+// Broadcasts the same full-screen countdown used before the guessing timer, but from the
+// results screen — every client (not just the host) sees it before the next round's roles
+// are dealt. results-view.js watches restartAt and has the host call startRound() once it
+// elapses.
+export async function triggerRestartCountdown(roomId) {
+  await update(ref(db, `rooms/${roomId}/public`), { restartAt: Date.now() + PREROUND_COUNTDOWN_MS });
 }
 
 // Two sequential single-path writes, not one atomic multi-path update: each write is then
@@ -103,6 +112,7 @@ export async function backToLobby(roomId) {
   });
   updates[`rooms/${roomId}/public/guess`] = null;
   updates[`rooms/${roomId}/public/timer`] = null;
+  updates[`rooms/${roomId}/public/restartAt`] = null;
   updates[`rooms/${roomId}/public/phase`] = "lobby";
   await update(ref(db), updates);
 }

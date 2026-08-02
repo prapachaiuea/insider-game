@@ -1,9 +1,12 @@
 import { getState } from "../state.js";
 import { computeResult } from "../votes.js";
-import { startRound, backToLobby } from "../game.js";
+import { startRound, backToLobby, triggerRestartCountdown } from "../game.js";
+import { serverNow } from "../utils/timer.js";
 import { showToast } from "./components.js";
 
 let initialized = false;
+let restartIntervalId = null;
+let restartTriggered = false;
 
 export function init() {
   if (initialized) return;
@@ -11,21 +14,15 @@ export function init() {
   document.getElementById("btn-play-again").addEventListener("click", async (e) => {
     const { roomId } = getState();
     const btn = e.target;
-    const originalText = btn.textContent;
     btn.disabled = true;
     try {
-      // A beat before the next round actually starts — gives everyone a second to look up
-      // from the results screen instead of instantly getting a new secret word.
-      for (let n = 3; n > 0; n--) {
-        btn.textContent = `Starting in ${n}…`;
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-      await startRound(roomId);
+      // Broadcasts a shared countdown (rendered below via the same full-screen overlay used
+      // before the guessing timer) instead of a host-only button-text countdown — everyone
+      // gets a beat to look up from the results screen, not just the host.
+      await triggerRestartCountdown(roomId);
     } catch {
       showToast("Could not start a new round — check your connection.", true);
-    } finally {
       btn.disabled = false;
-      btn.textContent = originalText;
     }
   });
   document.getElementById("btn-back-to-lobby").addEventListener("click", async () => {
@@ -34,8 +31,49 @@ export function init() {
   });
 }
 
+function restartTick() {
+  const state = getState();
+  const overlay = document.getElementById("preround-overlay");
+  const overlayNumber = document.getElementById("preround-number");
+  const restartAt = state.public?.restartAt;
+
+  if (!restartAt) {
+    overlay.hidden = true;
+    return;
+  }
+
+  const msRemaining = restartAt - serverNow();
+  if (msRemaining > 0) {
+    overlay.hidden = false;
+    overlayNumber.textContent = Math.ceil(msRemaining / 1000);
+    return;
+  }
+  overlay.hidden = true;
+
+  if (state.isHost && !restartTriggered) {
+    restartTriggered = true;
+    startRound(state.roomId).catch(() => {
+      showToast("Could not start a new round — check your connection.", true);
+    });
+  }
+}
+
 export function render(state) {
-  if (state.phase !== "results") return;
+  if (state.phase !== "results") {
+    if (restartIntervalId) {
+      clearInterval(restartIntervalId);
+      restartIntervalId = null;
+    }
+    restartTriggered = false;
+    document.getElementById("preround-overlay").hidden = true;
+    return;
+  }
+
+  if (!restartIntervalId) {
+    restartTriggered = false;
+    restartIntervalId = setInterval(() => restartTick(), 250);
+    restartTick();
+  }
 
   const banner = document.getElementById("results-banner");
   const insiderEl = document.getElementById("results-insider");
@@ -73,6 +111,7 @@ export function render(state) {
 
   if (state.isHost) {
     btnPlayAgain.hidden = false;
+    btnPlayAgain.disabled = Boolean(state.public?.restartAt);
     btnBackToLobby.hidden = false;
   } else {
     btnPlayAgain.hidden = true;
