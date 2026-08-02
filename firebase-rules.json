@@ -4,7 +4,7 @@
     ".write": false,
     "rooms": {
       "$roomId": {
-        ".write": "auth != null && !newData.exists() && data.child('public/createdAt').exists() && now > data.child('public/createdAt').val() + 86400000",
+        ".write": "auth != null && !newData.exists() && (auth.uid === data.child('public/host').val() || (data.child('public/createdAt').exists() && now > data.child('public/createdAt').val() + 86400000))",
         "public": {
           ".read": "auth != null",
           "host": {
@@ -26,7 +26,7 @@
             ".write": "auth != null && (auth.uid === root.child('rooms').child($roomId).child('public/host').val() || (root.child('rooms').child($roomId).child('players').child(auth.uid).exists() && root.child('rooms').child($roomId).child('public/phase').val() === 'guessing'))"
           },
           "phase": {
-            ".write": "auth != null && (auth.uid === root.child('rooms').child($roomId).child('public/host').val() || (root.child('rooms').child($roomId).child('players').child(auth.uid).exists() && data.val() === 'guessing' && newData.val() === 'voting') || (root.child('rooms').child($roomId).child('players').child(auth.uid).exists() && data.val() === 'guessing' && newData.val() === 'results' && now >= root.child('rooms').child($roomId).child('public/timer/startAt').val() + root.child('rooms').child($roomId).child('public/timer/durationMs').val()))"
+            ".write": "auth != null && (auth.uid === root.child('rooms').child($roomId).child('public/host').val() || (root.child('rooms').child($roomId).child('players').child(auth.uid).exists() && data.val() === 'guessing' && newData.val() === 'voting') || (root.child('rooms').child($roomId).child('players').child(auth.uid).exists() && data.val() === 'guessing' && newData.val() === 'results' && now >= root.child('rooms').child($roomId).child('public/timer/startAt').val() + root.child('rooms').child($roomId).child('public/timer/durationMs').val()) || (data.val() === 'voting' && newData.val() === 'results' && root.child('rooms').child($roomId).child('secrets').child(auth.uid).child('role').val() === 'master'))"
           }
         },
         "players": {

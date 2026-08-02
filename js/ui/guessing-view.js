@@ -30,6 +30,7 @@ export function render(state) {
       intervalId = null;
     }
     timeoutTriggered = false;
+    document.getElementById("preround-overlay").hidden = true;
     return;
   }
 
@@ -44,10 +45,26 @@ function tick() {
   const state = getState();
   const timer = state.public?.timer;
   const countdownEl = document.getElementById("countdown");
+  const overlay = document.getElementById("preround-overlay");
+  const overlayNumber = document.getElementById("preround-number");
+
   if (!timer) {
     countdownEl.textContent = "--:--";
+    overlay.hidden = true;
     return;
   }
+
+  // Lead-in: the timer hasn't actually started yet — every client shows the same big
+  // full-screen number, counting down from the shared startAt timestamp (not a host-only view).
+  const msUntilStart = timer.startAt - serverNow();
+  if (msUntilStart > 0) {
+    overlay.hidden = false;
+    overlayNumber.textContent = Math.ceil(msUntilStart / 1000);
+    countdownEl.textContent = formatCountdown(timer.durationMs);
+    return;
+  }
+  overlay.hidden = true;
+
   const remaining = timer.startAt + timer.durationMs - serverNow();
   countdownEl.textContent = formatCountdown(remaining);
 

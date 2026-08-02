@@ -59,7 +59,7 @@ export function render(state) {
   const votesCast = Object.keys(state.votes || {}).length;
   const totalPlayers = Object.keys(state.players || {}).length;
 
-  if (state.isHost) {
+  if (isMaster) {
     btnReveal.hidden = false;
     btnReveal.textContent = `Reveal Results (${votesCast}/${Math.max(totalPlayers - 1, 0)} voted)`;
   } else {

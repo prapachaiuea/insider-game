@@ -60,11 +60,16 @@ export async function setRoundDuration(roomId, durationMs) {
   await update(ref(db, `rooms/${roomId}/public`), { roundDurationMs: durationMs });
 }
 
+// Lead-in before the real timer starts, so every player sees the same synchronized
+// full-screen 3-2-1 countdown (guessing-view.js) instead of the clock just appearing already
+// running.
+const PREROUND_COUNTDOWN_MS = 3000;
+
 export async function startTimer(roomId) {
   const { public: pub } = getState();
   const durationMs = pub?.roundDurationMs || ROUND_DURATION_MS;
   await update(ref(db, `rooms/${roomId}/public`), {
-    timer: { startAt: Date.now(), durationMs },
+    timer: { startAt: Date.now() + PREROUND_COUNTDOWN_MS, durationMs },
     phase: "guessing",
   });
 }

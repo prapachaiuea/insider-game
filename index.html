@@ -11,11 +11,15 @@
 </head>
 <body>
   <div class="party-glow" aria-hidden="true"></div>
+  <div id="preround-overlay" class="preround-overlay" hidden>
+    <div id="preround-number" class="preround-number"></div>
+  </div>
   <header class="app-header">
     <p class="party-eyebrow">psst — someone's lying</p>
     <h1>Insider<span class="wink">😉</span></h1>
     <p class="room-code" id="room-code-display" hidden></p>
     <div class="header-controls">
+      <a id="btn-back-home" class="leave-link" href="https://prapachaiuea.github.io/party-games/">Back to Home</a>
       <button id="btn-mute-music" type="button" class="mute-toggle" aria-pressed="false" title="Toggle music">🔊</button>
       <button id="btn-leave-room" type="button" class="leave-link" hidden>Leave Room</button>
     </div>
