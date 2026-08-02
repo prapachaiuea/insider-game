@@ -1,15 +1,32 @@
 import { getState } from "../state.js";
 import { computeResult } from "../votes.js";
 import { startRound, backToLobby } from "../game.js";
+import { showToast } from "./components.js";
 
 let initialized = false;
 
 export function init() {
   if (initialized) return;
   initialized = true;
-  document.getElementById("btn-play-again").addEventListener("click", async () => {
+  document.getElementById("btn-play-again").addEventListener("click", async (e) => {
     const { roomId } = getState();
-    await startRound(roomId);
+    const btn = e.target;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    try {
+      // A beat before the next round actually starts — gives everyone a second to look up
+      // from the results screen instead of instantly getting a new secret word.
+      for (let n = 3; n > 0; n--) {
+        btn.textContent = `Starting in ${n}…`;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      await startRound(roomId);
+    } catch {
+      showToast("Could not start a new round — check your connection.", true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
   });
   document.getElementById("btn-back-to-lobby").addEventListener("click", async () => {
     const { roomId } = getState();
